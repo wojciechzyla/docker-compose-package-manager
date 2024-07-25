@@ -1,4 +1,0 @@
-AppName: my-app
-ReplicaCount: 3
-containers:
-  image: myregistry/my-app:v1.0.0
