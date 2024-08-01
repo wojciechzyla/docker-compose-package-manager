@@ -35,6 +35,8 @@ func parseTemplates(templatesPath string) ([]*template.Template, error) {
 		return nil, err
 	}
 	var templates []*template.Template
+	helperFiles := make([]string, 0)
+	templateFiles := make([]string, 0)
 
 	for _, file := range files {
 		if !file.IsDir() {
@@ -42,12 +44,23 @@ func parseTemplates(templatesPath string) ([]*template.Template, error) {
 			if err != nil {
 				return nil, err
 			}
-			tmpl, err := template.ParseFiles(absPath)
-			if err != nil {
-				return nil, err
+			if strings.HasSuffix(file.Name(), ".helper") {
+				helperFiles = append(helperFiles, absPath)
+			} else {
+				templateFiles = append(templateFiles, absPath)
 			}
-			templates = append(templates, tmpl)
 		}
+	}
+	files = nil
+	for _, filePath := range templateFiles {
+		tmpFiles := make([]string, 1)
+		tmpFiles[0] = filePath
+		tmpFiles = append(tmpFiles, helperFiles...)
+		tmpl, err := template.ParseFiles(tmpFiles...)
+		if err != nil {
+			return nil, err
+		}
+		templates = append(templates, tmpl)
 	}
 	return templates, nil
 }
