@@ -10,9 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wojciechzyla/docker-compose-package-manager/parsing"
-
 	"github.com/spf13/cobra"
+	"github.com/wojciechzyla/docker-compose-package-manager/src"
 )
 
 var renderHelp = `
@@ -58,7 +57,7 @@ func newRenderCommand() *cobra.Command {
 				}
 			}
 
-			err := parsing.Render(packagePath, outputPath, customValues)
+			err := src.Render(packagePath, outputPath, customValues)
 			if err != nil {
 				log.Fatalf("error occured while parsing files: %v", err)
 			}
