@@ -1,12 +1,9 @@
 package src
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
-	"text/template"
 
 	"dario.cat/mergo"
 	"github.com/pkg/errors"
@@ -53,21 +50,6 @@ func Render(packagePath, destinationPath, customValuesPath string) error {
 	err = combineYamls(tmpDir, destinationPath)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func executeTemplate(filePath string, values map[string]interface{}, tmpl *template.Template) error {
-	var tmpOutput bytes.Buffer
-	err := tmpl.Execute(&tmpOutput, values)
-	if err != nil {
-		return err
-	}
-	if len(strings.TrimSpace(tmpOutput.String())) > 0 {
-		err := os.WriteFile(filePath, tmpOutput.Bytes(), 0644)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
