@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -27,42 +26,6 @@ func valuesFromYamlFile(filePath string) (map[string]interface{}, error) {
 		return nil, errors.Wrap(err, "unmarshalling yaml file")
 	}
 	return values, nil
-}
-
-func parseTemplates(templatesPath string) ([]*template.Template, error) {
-	files, err := os.ReadDir(templatesPath)
-	if err != nil {
-		return nil, err
-	}
-	var templates []*template.Template
-	helperFiles := make([]string, 0)
-	templateFiles := make([]string, 0)
-
-	for _, file := range files {
-		if !file.IsDir() {
-			absPath, err := filepath.Abs(filepath.Join(templatesPath, file.Name()))
-			if err != nil {
-				return nil, err
-			}
-			if strings.HasSuffix(file.Name(), ".helper") {
-				helperFiles = append(helperFiles, absPath)
-			} else {
-				templateFiles = append(templateFiles, absPath)
-			}
-		}
-	}
-	files = nil
-	for _, filePath := range templateFiles {
-		tmpFiles := make([]string, 1)
-		tmpFiles[0] = filePath
-		tmpFiles = append(tmpFiles, helperFiles...)
-		tmpl, err := template.ParseFiles(tmpFiles...)
-		if err != nil {
-			return nil, err
-		}
-		templates = append(templates, tmpl)
-	}
-	return templates, nil
 }
 
 func combineYamls(sourceDirectory string, destinationFilePath string) error {
