@@ -21,37 +21,37 @@ func parseFiles(templates *[]*template.Template, templateFiles, helperFiles []st
 	return nil
 }
 
+func splitPaths(helperFiles, templateFiles, dirs *[]string, files []os.DirEntry, currentDir string) {
+	for _, file := range files {
+		absPath := filepath.Join(currentDir, file.Name())
+		if !file.IsDir() {
+			if strings.HasSuffix(file.Name(), ".helper") {
+				*helperFiles = append(*helperFiles, absPath)
+			} else {
+				*templateFiles = append(*templateFiles, absPath)
+			}
+		} else {
+			*dirs = append(*dirs, absPath)
+		}
+	}
+}
+
 func traverseTemplatesDir(templatesPath string, templates *[]*template.Template) error {
-	loop := true
 	helperFiles := make([]string, 0)
 	templateFiles := make([]string, 0)
 	dirs := make([]string, 1)
 	dirs[0] = templatesPath
-	for loop {
+	for {
 		currentDir := dirs[len(dirs)-1]
 		dirs = dirs[:len(dirs)-1]
 		files, err := os.ReadDir(currentDir)
 		if err != nil {
 			return err
 		}
-		for _, file := range files {
-			absPath, err := filepath.Abs(filepath.Join(currentDir, file.Name()))
-			if err != nil {
-				return err
-			}
-			if !file.IsDir() {
-				if strings.HasSuffix(file.Name(), ".helper") {
-					helperFiles = append(helperFiles, absPath)
-				} else {
-					templateFiles = append(templateFiles, absPath)
-				}
-			} else {
-				dirs = append(dirs, absPath)
-			}
-		}
+		splitPaths(&helperFiles, &templateFiles, &dirs, files, currentDir)
 		files = nil
 		if len(dirs) == 0 {
-			loop = false
+			break
 		}
 	}
 	err := parseFiles(templates, templateFiles, helperFiles)
