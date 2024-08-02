@@ -1,9 +1,12 @@
 package src
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"text/template"
 
 	"dario.cat/mergo"
 	"github.com/pkg/errors"
@@ -32,20 +35,20 @@ func Render(packagePath, destinationPath, customValuesPath string) error {
 	}
 
 	tmpDir, err := os.MkdirTemp("", "compose_render")
-	check(err)
+	if err != nil {
+		return err
+	}
 	defer os.RemoveAll(tmpDir)
 
 	for i, template := range templates {
 		fname := filepath.Join(tmpDir, fmt.Sprintf("rendered%d.yaml", i))
-		output, err := os.Create(fname)
 		if err != nil {
 			return errors.Wrap(err, "creating output tmp file")
 		}
-		err = template.Execute(output, values)
+		err = executeTemplate(fname, values, template)
 		if err != nil {
 			return errors.Wrap(err, "executing template file")
 		}
-		output.Close()
 	}
 	err = combineYamls(tmpDir, destinationPath)
 	if err != nil {
@@ -54,8 +57,17 @@ func Render(packagePath, destinationPath, customValuesPath string) error {
 	return nil
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
+func executeTemplate(filePath string, values map[string]interface{}, tmpl *template.Template) error {
+	var tmpOutput bytes.Buffer
+	err := tmpl.Execute(&tmpOutput, values)
+	if err != nil {
+		return err
 	}
+	if len(strings.TrimSpace(tmpOutput.String())) > 0 {
+		err := os.WriteFile(filePath, tmpOutput.Bytes(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
