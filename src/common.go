@@ -1,6 +1,7 @@
 package src
 
 import (
+	"bytes"
 	"io"
 	"os"
 	"path/filepath"
@@ -10,6 +11,21 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
+
+func executeTemplate(filePath string, values map[string]interface{}, tmpl *template.Template) error {
+	var tmpOutput bytes.Buffer
+	err := tmpl.Execute(&tmpOutput, values)
+	if err != nil {
+		return err
+	}
+	if len(strings.TrimSpace(tmpOutput.String())) > 0 {
+		err := os.WriteFile(filePath, tmpOutput.Bytes(), 0644)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func valuesFromYamlFile(filePath string) (map[string]interface{}, error) {
 	data, err := os.Open(filePath)
@@ -27,42 +43,6 @@ func valuesFromYamlFile(filePath string) (map[string]interface{}, error) {
 		return nil, errors.Wrap(err, "unmarshalling yaml file")
 	}
 	return values, nil
-}
-
-func parseTemplates(templatesPath string) ([]*template.Template, error) {
-	files, err := os.ReadDir(templatesPath)
-	if err != nil {
-		return nil, err
-	}
-	var templates []*template.Template
-	helperFiles := make([]string, 0)
-	templateFiles := make([]string, 0)
-
-	for _, file := range files {
-		if !file.IsDir() {
-			absPath, err := filepath.Abs(filepath.Join(templatesPath, file.Name()))
-			if err != nil {
-				return nil, err
-			}
-			if strings.HasSuffix(file.Name(), ".helper") {
-				helperFiles = append(helperFiles, absPath)
-			} else {
-				templateFiles = append(templateFiles, absPath)
-			}
-		}
-	}
-	files = nil
-	for _, filePath := range templateFiles {
-		tmpFiles := make([]string, 1)
-		tmpFiles[0] = filePath
-		tmpFiles = append(tmpFiles, helperFiles...)
-		tmpl, err := template.ParseFiles(tmpFiles...)
-		if err != nil {
-			return nil, err
-		}
-		templates = append(templates, tmpl)
-	}
-	return templates, nil
 }
 
 func combineYamls(sourceDirectory string, destinationFilePath string) error {

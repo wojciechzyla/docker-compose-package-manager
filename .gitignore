@@ -24,3 +24,7 @@ go.work.sum
 # directories
 test_project
 /.idea
+
+# custom files
+custom.yaml
+result.yaml
