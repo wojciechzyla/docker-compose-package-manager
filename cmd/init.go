@@ -17,8 +17,8 @@ Initialization of dcpm project with all basic directories and files
 `
 
 func handleCreationError(message string, path string) {
-	log.Fatalf(message)
 	os.RemoveAll(path)
+	log.Fatalf(message)
 }
 
 func newInitCommand() *cobra.Command {
@@ -44,7 +44,6 @@ func newInitCommand() *cobra.Command {
 			cwd, err := os.Getwd()
 			if err != nil {
 				log.Fatalf("error: %v", err)
-				return
 			}
 			projectPath := filepath.Join(cwd, args[0])
 			templatesPath := filepath.Join(projectPath, "templates")
@@ -52,20 +51,20 @@ func newInitCommand() *cobra.Command {
 			runningConfigPath := filepath.Join(projectPath, "running_config")
 
 			if err := os.MkdirAll(templatesPath, os.ModePerm); err != nil {
-				handleCreationError(fmt.Sprintf("Encountered the following error while creating a new directory: %s", err), projectPath)
+				handleCreationError(fmt.Sprintf("error while creating a new directory: %s", err), projectPath)
 			}
 
 			if err := os.MkdirAll(dependenciesPath, os.ModePerm); err != nil {
-				handleCreationError(fmt.Sprintf("Encountered the following error while creating a new directory: %s", err), projectPath)
+				handleCreationError(fmt.Sprintf("error while creating a new directory: %s", err), projectPath)
 			}
 
 			if err := os.MkdirAll(runningConfigPath, os.ModePerm); err != nil {
-				handleCreationError(fmt.Sprintf("Encountered the following error while creating a new directory: %s", err), projectPath)
+				handleCreationError(fmt.Sprintf("error while creating a new directory: %s", err), projectPath)
 			}
 
 			valuesPath := filepath.Join(projectPath, "values.yaml")
 			if _, err := os.Create(valuesPath); err != nil {
-				handleCreationError(fmt.Sprintf("Encountered the following error while creating a new file: %s", err), projectPath)
+				handleCreationError(fmt.Sprintf("error while creating a new file: %s", err), projectPath)
 			}
 		},
 	}

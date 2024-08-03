@@ -25,5 +25,7 @@ func Execute() {
 func init() {
 	rootCmd.AddCommand(
 		newInitCommand(),
-		newRenderCommand())
+		newRenderCommand(),
+		newInstallCommand(),
+		newUninstallCommand())
 }
