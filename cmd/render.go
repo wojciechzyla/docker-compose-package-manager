@@ -30,20 +30,17 @@ func newRenderCommand() *cobra.Command {
 			packagePath, err := filepath.Abs(packagePath)
 			if err != nil {
 				log.Fatalf("error: %v", err)
-				return
 			}
 
 			err = packagePathValid(packagePath)
 			if err != nil {
 				log.Fatalf("error: %v", err)
-				return
 			}
 
 			if len(customValues) > 0 {
 				err := processFilePath(&customValues)
 				if err != nil {
 					log.Fatalf("error: %v", err)
-					return
 				}
 			}
 			err = src.Render(packagePath, outputPath, customValues)

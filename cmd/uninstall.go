@@ -5,25 +5,21 @@ package cmd
 
 import (
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/wojciechzyla/docker-compose-package-manager/src"
 )
 
-var installHelp = `
-Install docker compose project
+var uninstallHelp = `
+Uninstall docker compose project
 `
-var composeConfig string
-var installValues string
 
-func newInstallCommand() *cobra.Command {
+func newUninstallCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "install",
-		Short: installHelp,
-		Long:  installHelp,
+		Use:   "uninstall",
+		Short: uninstallHelp,
+		Long:  uninstallHelp,
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			configurationFile := ""
@@ -47,37 +43,19 @@ func newInstallCommand() *cobra.Command {
 					log.Fatalf("error: %v", err)
 				}
 
-				if len(installValues) > 0 {
-					err := processFilePath(&installValues)
-					if err != nil {
-						log.Fatalf("error: %v", err)
-					}
-				}
 				configurationFile = filepath.Join(packagePath, "rendered.yaml")
-				err = src.Render(packagePath, configurationFile, installValues)
-				if err != nil {
-					log.Fatalf("error occured while parsing files: %v", err)
-				}
 			}
-			dockerCmd := exec.Command("docker", "compose", "-f", configurationFile, "up", "-d")
+			dockerCmd := exec.Command("docker", "compose", "-f", configurationFile, "down", "")
 			output, err := dockerCmd.CombinedOutput()
 			log.Printf("docker result:\n%s\n", output)
 			if err != nil {
-				log.Printf("error: %v", err)
-				err := os.Remove(configurationFile)
-				if err != nil {
-					log.Fatalf("error: failed to remove file: %v", err)
-				}
-				return
+				log.Fatalf("error: %v", err)
 			}
 		},
 	}
 
 	command.Flags().StringVarP(&composeConfig, "config", "c", "", "Path to the rendered configuration file")
 	command.MarkFlagFilename("config")
-
-	command.Flags().StringVarP(&installValues, "values", "v", "", "Path to the values.yaml")
-	command.MarkFlagFilename("values")
 
 	return command
 }
