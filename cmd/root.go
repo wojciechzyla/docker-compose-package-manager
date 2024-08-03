@@ -27,5 +27,6 @@ func init() {
 		newInitCommand(),
 		newRenderCommand(),
 		newInstallCommand(),
-		newUninstallCommand())
+		newUninstallCommand(),
+		newChecksumCommand())
 }
