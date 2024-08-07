@@ -14,11 +14,14 @@ import (
 
 func executeTemplate(filePath string, values map[string]interface{}, tmpl *template.Template) error {
 	var tmpOutput bytes.Buffer
+	if values == nil {
+		return errors.Errorf("providel values are nil")
+	}
 	err := tmpl.Execute(&tmpOutput, values)
 	if err != nil {
 		return err
 	}
-	if len(strings.TrimSpace(tmpOutput.String())) > 0 {
+	if len(strings.TrimSpace(tmpOutput.String())) > 0 && values != nil {
 		err := os.WriteFile(filePath, tmpOutput.Bytes(), 0644)
 		if err != nil {
 			return err

@@ -21,49 +21,32 @@ func parseFiles(templates *[]*template.Template, templateFiles, helperFiles []st
 	return nil
 }
 
-func splitPaths(helperFiles, templateFiles, dirs *[]string, files []os.DirEntry, currentDir string) {
-	for _, file := range files {
-		absPath := filepath.Join(currentDir, file.Name())
-		if !file.IsDir() {
-			if strings.HasSuffix(file.Name(), ".helper") {
-				*helperFiles = append(*helperFiles, absPath)
-			} else {
-				*templateFiles = append(*templateFiles, absPath)
-			}
-		} else {
-			*dirs = append(*dirs, absPath)
-		}
-	}
-}
-
-func traverseTemplatesDir(templatesPath string, templates *[]*template.Template) error {
+func parseTemplates(templatesPath string) ([]*template.Template, error) {
+	var templates []*template.Template
 	helperFiles := make([]string, 0)
 	templateFiles := make([]string, 0)
-	dirs := make([]string, 1)
-	dirs[0] = templatesPath
-	for {
-		currentDir := dirs[len(dirs)-1]
-		dirs = dirs[:len(dirs)-1]
-		files, err := os.ReadDir(currentDir)
+	err := filepath.WalkDir(templatesPath, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		splitPaths(&helperFiles, &templateFiles, &dirs, files, currentDir)
-		files = nil
-		if len(dirs) == 0 {
-			break
+		if d.IsDir() {
+			return nil
 		}
-	}
-	err := parseFiles(templates, templateFiles, helperFiles)
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		if strings.HasSuffix(d.Name(), ".helper") {
+			helperFiles = append(helperFiles, absPath)
+		} else {
+			templateFiles = append(templateFiles, absPath)
+		}
+		return nil
+	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
-}
-
-func parseTemplates(templatesPath string) ([]*template.Template, error) {
-	var templates []*template.Template
-	err := traverseTemplatesDir(templatesPath, &templates)
+	err = parseFiles(&templates, templateFiles, helperFiles)
 	if err != nil {
 		return nil, err
 	}

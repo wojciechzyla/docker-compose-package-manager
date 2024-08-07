@@ -15,7 +15,7 @@ import (
 
 func checksumDirectory(root string, filesToSkip []string) (string, error) {
 	hasher := sha256.New()
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
