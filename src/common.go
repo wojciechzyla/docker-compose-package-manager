@@ -14,6 +14,9 @@ import (
 
 func executeTemplate(filePath string, values map[string]interface{}, tmpl *template.Template) error {
 	var tmpOutput bytes.Buffer
+	if values == nil {
+		return errors.Errorf("providel values are nil")
+	}
 	err := tmpl.Execute(&tmpOutput, values)
 	if err != nil {
 		return err
