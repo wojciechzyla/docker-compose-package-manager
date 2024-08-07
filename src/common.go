@@ -21,7 +21,7 @@ func executeTemplate(filePath string, values map[string]interface{}, tmpl *templ
 	if err != nil {
 		return err
 	}
-	if len(strings.TrimSpace(tmpOutput.String())) > 0 && values != nil {
+	if len(strings.TrimSpace(tmpOutput.String())) > 0 {
 		err := os.WriteFile(filePath, tmpOutput.Bytes(), 0644)
 		if err != nil {
 			return err
