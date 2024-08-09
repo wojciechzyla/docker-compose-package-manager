@@ -32,14 +32,10 @@ func parseTemplates(templatesPath string) ([]*template.Template, error) {
 		if d.IsDir() {
 			return nil
 		}
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
 		if strings.HasSuffix(d.Name(), ".helper") {
-			helperFiles = append(helperFiles, absPath)
+			helperFiles = append(helperFiles, path)
 		} else {
-			templateFiles = append(templateFiles, absPath)
+			templateFiles = append(templateFiles, path)
 		}
 		return nil
 	})

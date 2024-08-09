@@ -1,0 +1,15 @@
+{{- $nginx := .nginx -}}
+version: '3.8'
+
+services:
+  web:
+    image: {{ $nginx.image }}
+    container_name: {{ $nginx.container_name }}
+    ports:
+      - "8080:80"
+    volumes:
+      {{- range $volume := $nginx.volumes }}
+      - {{ $volume }}
+      {{- end }}
+    networks:
+      - backend

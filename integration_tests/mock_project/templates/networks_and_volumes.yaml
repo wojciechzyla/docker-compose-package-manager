@@ -1,0 +1,9 @@
+version: '3.8'
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  db_data:
+  html:

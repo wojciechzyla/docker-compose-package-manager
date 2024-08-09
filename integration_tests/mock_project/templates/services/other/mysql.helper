@@ -1,0 +1,9 @@
+{{define "mysql-env"}}
+{{- $mysql := .mysql -}}
+{{- if $mysql.environment }}
+    environment:
+      {{- range $env := $mysql.environment }}
+      {{ $env.key }}: {{ $env.value }}
+      {{- end }}
+{{- end }}
+{{- end -}}

@@ -61,7 +61,7 @@ To verify a checksum run "dcpm checksum check [path_to_package]".
 func newChecksumCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "checksum",
-		Short: "create or verify checksum of the package",
+		Short: "Create or verify checksum of the package",
 		Long:  checksumHelp,
 		Args:  cobra.NoArgs,
 	}

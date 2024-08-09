@@ -54,7 +54,7 @@ func newRenderCommand() *cobra.Command {
 	command.MarkFlagRequired("package_path")
 	command.MarkFlagDirname("package_path")
 
-	command.Flags().StringVarP(&outputPath, "output_path", "o", "", "Path the output file (required)")
+	command.Flags().StringVarP(&outputPath, "output_path", "o", "", "Path to the directory, where rendered files will be saved (required)")
 	command.MarkFlagRequired("output_path")
 	command.MarkFlagFilename("output_path")
 

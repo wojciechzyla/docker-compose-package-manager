@@ -1,0 +1,14 @@
+{{- $mysql := .mysql -}}
+version: '3.8'
+
+services:
+  db:
+    image: {{ $mysql.image }}
+    container_name: {{ $mysql.container_name }}
+    {{- template "mysql-env" .}} 
+    volumes:
+      {{- range $volume := $mysql.volumes }}
+      - {{ $volume }}
+      {{- end }}
+    networks:
+      - backend

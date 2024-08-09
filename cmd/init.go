@@ -12,9 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var initHelp = `
-Initialization of dcpm project with all basic directories and files
-`
+var initHelp = `Initialization of dcpm project with all basic directories and files. Run dcpm <project_name>`
 
 func handleCreationError(message string, path string) {
 	os.RemoveAll(path)
@@ -47,7 +45,7 @@ func newInitCommand() *cobra.Command {
 			}
 			projectPath := filepath.Join(cwd, args[0])
 			templatesPath := filepath.Join(projectPath, "templates")
-			dependenciesPath := filepath.Join(projectPath, "dependencies")
+			dependenciesPath := filepath.Join(projectPath, "additional")
 			runningConfigPath := filepath.Join(projectPath, "running_config")
 
 			if err := os.MkdirAll(templatesPath, os.ModePerm); err != nil {

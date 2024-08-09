@@ -7,13 +7,13 @@ import (
 	"log"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 
 	"github.com/spf13/cobra"
+	"github.com/wojciechzyla/docker-compose-package-manager/src"
 )
 
-var uninstallHelp = `
-Uninstall docker compose project
-`
+var uninstallHelp = `Uninstall docker compose project`
 
 func newUninstallCommand() *cobra.Command {
 	command := &cobra.Command{
@@ -22,13 +22,14 @@ func newUninstallCommand() *cobra.Command {
 		Long:  uninstallHelp,
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			configurationFile := ""
+			configurationDir := ""
+			pattern := regexp.MustCompile(`^docker-compose-rendered-\d+\.yaml$`)
 			if len(composeConfig) > 0 {
 				err := processFilePath(&composeConfig)
 				if err != nil {
 					log.Fatalf("error: %v", err)
 				}
-				configurationFile = composeConfig
+				configurationDir = composeConfig
 			} else {
 				if len(args) == 0 {
 					log.Fatalf("no path to the package provided")
@@ -43,13 +44,23 @@ func newUninstallCommand() *cobra.Command {
 					log.Fatalf("error: %v", err)
 				}
 
-				configurationFile = filepath.Join(packagePath, "rendered.yaml")
+				configurationDir = filepath.Join(packagePath, "running_config")
 			}
-			dockerCmd := exec.Command("docker", "compose", "-f", configurationFile, "down", "")
+			files, err := dockerComposeFilesInstall(configurationDir, pattern)
+			if err != nil {
+				log.Fatalf("error: during handling compose files: %v", err)
+			}
+			files = append([]string{"compose"}, files...)
+			files = append(files, "down")
+			dockerCmd := exec.Command("docker", files...)
 			output, err := dockerCmd.CombinedOutput()
 			log.Printf("docker result:\n%s\n", output)
 			if err != nil {
 				log.Fatalf("error: %v", err)
+			}
+			err = src.RemoveFilesFromDir(configurationDir, pattern)
+			if err != nil {
+				log.Fatalf("error occured while deleting files: %v", err)
 			}
 		},
 	}

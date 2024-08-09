@@ -1,0 +1,10 @@
+{{- if .redis.enable -}}
+version: '3.8'
+
+services:
+  redis:
+    image: {{ .redis.image }}
+    container_name: {{ .redis.container_name }}
+    networks:
+      - backend
+{{- end -}}
