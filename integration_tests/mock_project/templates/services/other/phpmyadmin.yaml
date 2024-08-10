@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  phpmyadmin:
+    image: {{ .phpmyadmin.image }}
+    container_name: {{ .phpmyadmin.container_name }}
+    {{- template "phpmyadmin-env" .}} 
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    networks:
+      - backend

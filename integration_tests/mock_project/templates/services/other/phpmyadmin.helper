@@ -1,0 +1,9 @@
+{{define "phpmyadmin-env"}}
+{{- $phpmyadmin := .phpmyadmin -}}
+{{- if $phpmyadmin.environment }}
+    environment:
+      {{- range $env := $phpmyadmin.environment }}
+      {{ $env.key }}: {{ $env.value }}
+      {{- end }}
+{{- end }}
+{{- end -}}

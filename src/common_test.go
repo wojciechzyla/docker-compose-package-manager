@@ -3,9 +3,11 @@ package src
 import (
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"testing"
 	"text/template"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExecuteTemplate(t *testing.T) {
@@ -113,89 +115,85 @@ func TestValuesFromYamlFile(t *testing.T) {
 	}
 }
 
-func TestCombineYamls(t *testing.T) {
-	tests := []struct {
-		name            string
-		sourceFiles     map[string]string
-		expectErr       bool
-		expectedContent string
-	}{
-		{
-			name: "CombineMultipleYamls",
-			sourceFiles: map[string]string{
-				"file1.yaml": "name: Test1\nage: 30",
-				"file2.yaml": "name: Test2\nage: 25",
-			},
-			expectErr:       false,
-			expectedContent: "name: Test1\nage: 30\n---\nname: Test2\nage: 25",
-		},
-		{
-			name: "SingleYaml",
-			sourceFiles: map[string]string{
-				"file1.yaml": "name: Test1\nage: 30",
-			},
-			expectErr:       false,
-			expectedContent: "name: Test1\nage: 30",
-		},
-		{
-			name:            "NoYamls",
-			sourceFiles:     map[string]string{},
-			expectErr:       false,
-			expectedContent: "",
-		},
-		{
-			name:            "InvalidDirectory",
-			sourceFiles:     nil,
-			expectErr:       true,
-			expectedContent: "",
-		},
+func TestRemoveFilesFromDir(t *testing.T) {
+	// Create a temporary directory for testing
+	dir, err := os.MkdirTemp("", "testdir")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir) // Clean up after the test
+
+	// Create test files in the temporary directory
+	files := []string{
+		"docker-compose-rendered-1.yaml",
+		"docker-compose-rendered-2.yaml",
+		"docker-compose-rendered-3.yaml",
+		"not-to-be-deleted.yaml",
+	}
+	for _, file := range files {
+		_, err := os.Create(filepath.Join(dir, file))
+		assert.NoError(t, err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sourceDir, err := os.MkdirTemp("", "test_src")
-			if err != nil {
-				t.Fatalf("Failed to create temp source directory: %v", err)
-			}
-			defer os.RemoveAll(sourceDir)
+	// Define the regex pattern to match files
+	pattern := regexp.MustCompile(`^docker-compose-rendered-\d+\.yaml$`)
 
-			for fileName, content := range tt.sourceFiles {
-				filePath := filepath.Join(sourceDir, fileName)
-				err := os.WriteFile(filePath, []byte(content), 0644)
-				if err != nil {
-					t.Fatalf("Failed to write to source file: %v", err)
-				}
-			}
+	// Call the function to remove matching files
+	err = RemoveFilesFromDir(dir, pattern)
+	assert.NoError(t, err)
 
-			destFile, err := os.CreateTemp("", "test_dest.yaml")
-			if err != nil {
-				t.Fatalf("Failed to create temp destination file: %v", err)
-			}
-			defer os.Remove(destFile.Name())
-			destFile.Close()
-
-			srcDir := sourceDir
-			if tt.sourceFiles == nil {
-				srcDir = "invalid_directory"
-			}
-
-			err = combineYamls(srcDir, destFile.Name())
-			if (err != nil) != tt.expectErr {
-				t.Errorf("combineYamls() error = %v, expectErr %v", err, tt.expectErr)
-				return
-			}
-
-			if !tt.expectErr {
-				content, err := os.ReadFile(destFile.Name())
-				if err != nil {
-					t.Fatalf("Failed to read destination file: %v", err)
-				}
-				if strings.TrimSpace(string(content)) != tt.expectedContent {
-					t.Errorf("combineYamls() content = %v, expected %v", string(content), tt.expectedContent)
-				}
-			}
-		})
+	// Verify that the matching files were deleted
+	for _, file := range files {
+		_, err := os.Stat(filepath.Join(dir, file))
+		if pattern.MatchString(file) {
+			assert.True(t, os.IsNotExist(err), "File should have been deleted: %s", file)
+		} else {
+			assert.NoError(t, err, "File should not have been deleted: %s", file)
+		}
 	}
+}
+
+func TestRemoveFilesFromDir_NoMatches(t *testing.T) {
+	// Create a temporary directory for testing
+	dir, err := os.MkdirTemp("", "testdir")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir) // Clean up after the test
+
+	// Create test files in the temporary directory
+	files := []string{
+		"file1.yaml",
+		"file2.yaml",
+		"file3.yaml",
+	}
+	for _, file := range files {
+		_, err := os.Create(filepath.Join(dir, file))
+		assert.NoError(t, err)
+	}
+
+	// Define the regex pattern that doesn't match any files
+	pattern := regexp.MustCompile(`^no-match-\d+\.yaml$`)
+
+	// Call the function to remove matching files
+	err = RemoveFilesFromDir(dir, pattern)
+	assert.NoError(t, err)
+
+	// Verify that no files were deleted
+	for _, file := range files {
+		_, err := os.Stat(filepath.Join(dir, file))
+		assert.NoError(t, err, "File should not have been deleted: %s", file)
+	}
+}
+
+func TestRemoveFilesFromDir_ErrorHandling(t *testing.T) {
+	// Create a temporary directory for testing
+	dir, err := os.MkdirTemp("", "testdir")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir) // Clean up after the test
+
+	// Define the regex pattern to match files
+	pattern := regexp.MustCompile(`^docker-compose-rendered-\d+\.yaml$`)
+
+	// Pass a non-existent directory to induce an error
+	err = RemoveFilesFromDir(filepath.Join(dir, "non-existent-dir"), pattern)
+	assert.Error(t, err, "Expected an error due to non-existent directory")
 }
 
 // Helper function to compare two maps

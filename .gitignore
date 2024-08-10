@@ -24,7 +24,13 @@ go.work.sum
 # directories
 test_project
 /.idea
+result
+e2e-tests-env
+.pytest_cache
+.pytest
+__pycache__
 
 # custom files
 custom.yaml
 result.yaml
+dcpm

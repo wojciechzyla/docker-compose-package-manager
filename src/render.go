@@ -2,7 +2,6 @@ package src
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"dario.cat/mergo"
@@ -31,25 +30,12 @@ func Render(packagePath, destinationPath, customValuesPath string) error {
 		return errors.Wrap(err, "paring emplates")
 	}
 
-	tmpDir, err := os.MkdirTemp("", "compose_render")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
 	for i, template := range templates {
-		fname := filepath.Join(tmpDir, fmt.Sprintf("rendered%d.yaml", i))
-		if err != nil {
-			return errors.Wrap(err, "creating output tmp file")
-		}
+		fname := filepath.Join(destinationPath, fmt.Sprintf("docker-compose-rendered-%d.yaml", i))
 		err = executeTemplate(fname, values, template)
 		if err != nil {
 			return errors.Wrap(err, "executing template file")
 		}
-	}
-	err = combineYamls(tmpDir, destinationPath)
-	if err != nil {
-		return err
 	}
 	return nil
 }

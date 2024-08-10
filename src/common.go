@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -48,35 +49,19 @@ func valuesFromYamlFile(filePath string) (map[string]interface{}, error) {
 	return values, nil
 }
 
-func combineYamls(sourceDirectory string, destinationFilePath string) error {
-	files, err := os.ReadDir(sourceDirectory)
-	if err != nil {
-		return err
-	}
-	var combinedContent strings.Builder
-
-	for i, file := range files {
-		if !file.IsDir() {
-			absPath, err := filepath.Abs(filepath.Join(sourceDirectory, file.Name()))
+func RemoveFilesFromDir(directory string, pattern *regexp.Regexp) error {
+	err := filepath.WalkDir(directory, func(path string, info os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && pattern.MatchString(info.Name()) {
+			err = os.Remove(path)
 			if err != nil {
 				return err
-			}
-			content, err := os.ReadFile(absPath)
-			if err != nil {
-				return err
-			}
-
-			combinedContent.Write(content)
-
-			// Add YAML document separator if it's not the last file
-			if i < len(files)-1 {
-				combinedContent.WriteString("\n---\n")
 			}
 		}
-	}
-	err = os.WriteFile(destinationFilePath, []byte(combinedContent.String()), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+		return nil
+	})
+
+	return errors.Wrap(err, "Error walking through directory:")
 }
