@@ -8,78 +8,22 @@ on:
 
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Go
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.20' # Specify the version of Go you are using
-
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Specify the version of Node.js you need for semantic-release
+          node-version: '18'
 
-      # Install semantic-release and plugins
       - name: Install semantic-release and plugins
         run: |
-          npm install -g semantic-release @semantic-release/cli
+          npm install semantic-release @semantic-release/git @semantic-release/exec
 
-      # Extract the current version from main.go
-      - name: Extract current version
-        id: extract_version
-        run: |
-          VERSION=$(grep 'const VERSION string =' main.go | sed -E 's/.*"([0-9]+\.[0-9]+\.[0-9]+)".*/\1/')
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "Current version: ${VERSION}"
-
-      # Set release type based on branch
-      - name: Set release type
-        id: set_release_type
-        run: |
-          if [ "${GITHUB_REF}" == "refs/heads/main" ]; then
-            echo "RELEASE_TYPE=release" >> $GITHUB_ENV
-          elif [ "${GITHUB_REF}" == "refs/heads/develop" ]; then
-            echo "RELEASE_TYPE=beta" >> $GITHUB_ENV
-          else
-            echo "RELEASE_TYPE=unknown" >> $GITHUB_ENV
-          fi
-          echo "Release type: ${RELEASE_TYPE}"
-
-      # Run semantic-release to determine the new version and create a release
-      - name: Run semantic-release
-        run: |
-          semantic-release --no-ci
-
-      # Build the Go binary
-      - name: Build Go application
-        run: go build -o dcpm ./path/to/your/main/package
-
-      # Create a ZIP of the project
-      - name: Create ZIP of the project
-        run: |
-          zip -r project.zip . -x "*.git*" "*.github/*" "release.yml"
-
-      # Upload release artifacts
-      - name: Upload release artifacts
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ./project.zip
-          asset_name: project.zip
-          asset_content_type: application/zip
-
-      - name: Upload binary
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: ./dcpm
-          asset_name: dcpm
-          asset_content_type: application/octet-stream
+      - name: Run Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
