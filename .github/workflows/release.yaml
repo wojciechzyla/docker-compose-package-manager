@@ -10,6 +10,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -19,11 +20,36 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
       - name: Install semantic-release and plugins
         run: |
           npm install semantic-release @semantic-release/git @semantic-release/exec
+
+      - name: Build Go binary
+        run: |
+          go build -o dcpm
+
+      - name: Create zip archive
+        run: |
+          zip -r docker-compose-package-manager.zip . -x "."
 
       - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Upload Release Assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: myproject.zip
+          path: myproject.zip
+
+      - name: Upload Binary Asset
+        uses: actions/upload-artifact@v3
+        with:
+          name: dcpm
+          path: dcpm
