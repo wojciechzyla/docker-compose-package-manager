@@ -70,7 +70,7 @@ def test_render_errors(render_errors_setup):
     assert "can't find values.yaml inside direcotry:" in result.stderr
     assert "can't find templates direcotry inside direcotry:" in result.stderr
     assert "can't find running_config direcotry inside direcotry:" in result.stderr
-    assert "can't find dependencies direcotry inside direcotry:" in result.stderr
+    assert "can't find additional direcotry inside direcotry:" in result.stderr
 
 
 @pytest.fixture(scope="function")
