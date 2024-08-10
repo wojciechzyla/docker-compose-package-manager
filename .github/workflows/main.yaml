@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  test:
+  unit-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,3 +28,66 @@ jobs:
       # Run Go unit tests
       - name: Run unit tests
         run: go test ./src -v
+
+  integration-tests-check:
+    name: Check if run integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v4
+      - name: Get commit message
+        id: get_commit_message
+        run: |
+          if [[ '${{ github.event_name }}' == 'push' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD)
+          elif [[ '${{ github.event_name }}' == 'pull_request' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD^2)
+          fi
+    outputs:
+      commit_message:
+        echo "${{ steps.get_commit_message.outputs.commit_message }}"
+
+  test-integration-microk8s:
+    name: Run integration tests in microk8s deployment
+    needs:
+      - integration-tests-check
+    runs-on: ubuntu-latest
+    if: "contains(needs.integration-tests-check.outputs.commit_message, '[integration-tests]')"
+    timeout-minutes: 120
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # Specify the Python version you need
+
+      - name: Create virtual environment and install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install pytest
+
+      - name: Build Go application
+        run: |
+          go build -o dcpm
+
+      - name: Move binary to integration_tests directory
+        run: |
+          mkdir -p integrations_tests
+          mv dcpm integrations_tests/
+
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
+      - name: Install Docker Compose
+        run: |
+          VERSION=$(curl --silent "https://api.github.com/repos/docker/compose/releases/latest" | jq -r '.tag_name')
+          sudo curl -L "https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
+      - name: Run integration tests
+        run: |
+          cd integrations_tests
+          pytest .
