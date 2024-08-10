@@ -9,52 +9,32 @@ on:
 jobs:
   unit-test:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Go environment
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.22'
 
-      # Install Go module dependencies
       - name: Install dependencies
         run: go mod tidy
 
-      # Run Go unit tests
       - name: Run unit tests
         run: go test ./src -v
 
-  integration-tests-check:
-    name: Check if run integration tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Project
-        uses: actions/checkout@v4
-      - name: Get commit message
-        id: get_commit_message
-        run: |
-          if [[ '${{ github.event_name }}' == 'push' ]]; then
-            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD)
-          elif [[ '${{ github.event_name }}' == 'pull_request' ]]; then
-            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD^2)
-          fi
-    outputs:
-      commit_message:
-        echo "${{ steps.get_commit_message.outputs.commit_message }}"
-
-  test-integration-microk8s:
+  integration-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # Specify the Python version you need
+          python-version: '3.11' 
 
       - name: Create virtual environment and install dependencies
         run: |
@@ -62,6 +42,11 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install pytest
+      
+    - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
 
       - name: Build Go application
         run: |
