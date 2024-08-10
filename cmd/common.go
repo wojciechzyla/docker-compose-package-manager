@@ -25,7 +25,7 @@ func packagePathValid(path string) error {
 		errorsSlice = append(errorsSlice, fmt.Errorf("can't find running_config direcotry inside direcotry: %s", path))
 	}
 	if _, err := os.Stat(filepath.Join(path, "additional")); errors.Is(err, os.ErrNotExist) {
-		errorsSlice = append(errorsSlice, fmt.Errorf("can't find dependencies direcotry inside direcotry: %s", path))
+		errorsSlice = append(errorsSlice, fmt.Errorf("can't find additional direcotry inside direcotry: %s", path))
 	}
 	if len(errorsSlice) > 0 {
 		return errors.Join(errorsSlice...)
