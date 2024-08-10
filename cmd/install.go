@@ -4,7 +4,7 @@ Copyright © 2024 Wojciech Żyła <wojciechzyla.mail@gmail.com>
 package cmd
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,79 +14,84 @@ import (
 	"github.com/wojciechzyla/docker-compose-package-manager/src"
 )
 
-var installHelp = `Install docker compose project`
+var installHelp = `To install docker compose project run 'dcpm install [path_to_package]'`
 var composeConfig string
 var installValues string
 
 func newInstallCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "install",
-		Short: installHelp,
+		Short: `Install docker compose project`,
 		Long:  installHelp,
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			configurationDir := ""
 			pattern := regexp.MustCompile(`^docker-compose-rendered-\d+\.yaml$`)
 			if len(composeConfig) > 0 {
 				err := processFilePath(&composeConfig)
 				if err != nil {
-					log.Fatalf("error: %v", err)
+					fmt.Fprintf(os.Stderr, "error: %v", err)
+					os.Exit(1)
 				}
 				configurationDir = composeConfig
 			} else {
-				if len(args) == 0 {
-					log.Fatalf("no path to the package provided")
-				}
 				packagePath, err := filepath.Abs(args[0])
 				if err != nil {
-					log.Fatalf("error: %v", err)
+					fmt.Fprintf(os.Stderr, "error: %v", err)
+					os.Exit(1)
 				}
 
 				err = packagePathValid(packagePath)
 				if err != nil {
-					log.Fatalf("error: %v", err)
+					fmt.Fprintf(os.Stderr, "error: %v", err)
+					os.Exit(1)
 				}
 
 				if len(installValues) > 0 {
 					err := processFilePath(&installValues)
 					if err != nil {
-						log.Fatalf("error: %v", err)
+						fmt.Fprintf(os.Stderr, "error: %v", err)
+						os.Exit(1)
 					}
 				}
 				configurationDir = filepath.Join(packagePath, "running_config")
 				err = src.RemoveFilesFromDir(configurationDir, pattern)
 				if err != nil {
-					log.Fatalf("error occured while deleting files: %v", err)
+					fmt.Fprintf(os.Stderr, "error: during deleting files: %v", err)
+					os.Exit(1)
 				}
 				err = src.Render(packagePath, configurationDir, installValues)
 				if err != nil {
-					log.Fatalf("error occured while parsing files: %v", err)
+					fmt.Fprintf(os.Stderr, "error: during parsing files: %v", err)
+					os.Exit(1)
 				}
 			}
 			files, err := dockerComposeFilesInstall(configurationDir, pattern)
 			if err != nil {
-				log.Fatalf("error: during handling compose files: %v", err)
+				fmt.Fprintf(os.Stderr, "error: during handling compose files: %v", err)
+				os.Exit(1)
 			}
 			files = append([]string{"compose"}, files...)
 			files = append(files, "up", "-d")
 			dockerCmd := exec.Command("docker", files...)
 			output, err := dockerCmd.CombinedOutput()
-			log.Printf("docker result:\n%s\n", output)
+			fmt.Printf("docker result:\n%s\n", output)
 			if err != nil {
-				log.Printf("error: %v", err)
+				fmt.Fprintf(os.Stderr, "error: %v", err)
 				err := src.RemoveFilesFromDir(configurationDir, pattern)
 				if err != nil {
-					log.Fatalf("error occured while deleting files: %v", err)
+					fmt.Fprintf(os.Stderr, "error: during deleting files: %v", err)
+					os.Exit(1)
 				}
-				return
+				os.Exit(1)
 			}
 		},
 	}
 
-	command.Flags().StringVarP(&composeConfig, "config", "c", "", "Path to the direcotry where configuration files will be rendered")
+	command.Flags().StringVarP(&composeConfig, "config", "c", "", "Path to the direcotry where configuration files will be rendered (optional)")
 	command.MarkFlagFilename("config")
 
-	command.Flags().StringVarP(&installValues, "values", "v", "", "Path to the values.yaml")
+	command.Flags().StringVarP(&installValues, "values", "v", "", "Path to the cutom values.yaml (optional)")
 	command.MarkFlagFilename("values")
 
 	return command

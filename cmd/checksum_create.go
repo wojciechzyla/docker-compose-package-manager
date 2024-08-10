@@ -6,7 +6,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -37,23 +36,27 @@ func newChecksumCreateCommand() *cobra.Command {
 			var filesToSkip = []string{"CHECKSUM"}
 			packagePath, err := filepath.Abs(args[0])
 			if err != nil {
-				log.Fatalf("error: %v", err)
+				fmt.Fprintf(os.Stderr, "error: %v", err)
+				os.Exit(1)
 			}
 
 			checksum, err := checksumDirectory(packagePath, filesToSkip)
 			if err != nil {
-				log.Fatalf("error: %v", err)
+				fmt.Fprintf(os.Stderr, "error: %v", err)
+				os.Exit(1)
 			}
 
 			file, err := os.Create(filepath.Join(packagePath, "CHECKSUM"))
 			if err != nil {
-				log.Fatalf("error: %v", err)
+				fmt.Fprintf(os.Stderr, "error: %v", err)
+				os.Exit(1)
 			}
 			defer file.Close()
 
 			_, err = file.WriteString(checksum)
 			if err != nil {
-				log.Fatalf("error: %v", err)
+				fmt.Fprintf(os.Stderr, "error: %v", err)
+				os.Exit(1)
 			}
 		},
 	}

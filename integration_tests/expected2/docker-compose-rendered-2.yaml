@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_edit 
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    networks:
+      - backend

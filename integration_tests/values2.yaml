@@ -1,0 +1,20 @@
+redis:
+  enable: false
+
+phpmyadmin:
+  container_name: phpmyadmin_edit
+  environment:
+
+mysql:
+  image: mysql:5.6
+  container_name: db_edit
+  volumes:
+    - db_data:/var/lib/mysql
+  environment:
+    - key: MYSQL_ROOT_PASSWORD
+      value: rootpassword
+
+nginx:
+  volumes:
+    - html:/usr/share/nginx/html
+    - ./test:/usr/share/nginx/test

@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.6
+    container_name: db_edit
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword 
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend

@@ -4,7 +4,8 @@ Copyright © 2024 Wojciech Żyła <wojciechzyla.mail@gmail.com>
 package cmd
 
 import (
-	"log"
+	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -29,23 +30,27 @@ func newRenderCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			packagePath, err := filepath.Abs(packagePath)
 			if err != nil {
-				log.Fatalf("error: %v", err)
+				fmt.Fprintf(os.Stderr, "error: %v", err)
+				os.Exit(1)
 			}
 
 			err = packagePathValid(packagePath)
 			if err != nil {
-				log.Fatalf("error: %v", err)
+				fmt.Fprintf(os.Stderr, "error: %v", err)
+				os.Exit(1)
 			}
 
 			if len(customValues) > 0 {
 				err := processFilePath(&customValues)
 				if err != nil {
-					log.Fatalf("error: %v", err)
+					fmt.Fprintf(os.Stderr, "error: %v", err)
+					os.Exit(1)
 				}
 			}
 			err = src.Render(packagePath, outputPath, customValues)
 			if err != nil {
-				log.Fatalf("error occured while parsing files: %v", err)
+				fmt.Fprintf(os.Stderr, "error: during parsing files: %v", err)
+				os.Exit(1)
 			}
 		},
 	}
