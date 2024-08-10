@@ -27,7 +27,7 @@ jobs:
 
       - name: Install semantic-release and plugins
         run: |
-          npm install semantic-release @semantic-release/git @semantic-release/exec
+          npm install semantic-release @semantic-release/git @semantic-release/exec @semantic-release/changelog @semantic-release/release-notes-generator @semantic-release/npm @semantic-release/github
 
       - name: Build Go binary
         run: |
