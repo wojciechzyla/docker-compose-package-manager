@@ -24,6 +24,7 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
+    if: github.event.head_commit.message ~ '[int-tests]'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
