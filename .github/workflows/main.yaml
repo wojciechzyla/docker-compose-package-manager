@@ -27,5 +27,4 @@ jobs:
 
       # Run Go unit tests
       - name: Run unit tests
-        run: |
-        go test ./src -v
+        run: go test ./src -v
