@@ -10,7 +10,12 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+      deployments: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -27,7 +32,7 @@ jobs:
 
       - name: Install semantic-release and plugins
         run: |
-          npm install semantic-release @semantic-release/git @semantic-release/exec
+          npm install semantic-release @semantic-release/git @semantic-release/exec @semantic-release/changelog @semantic-release/release-notes-generator @semantic-release/npm @semantic-release/github
 
       - name: Build Go binary
         run: |
