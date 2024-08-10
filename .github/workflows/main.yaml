@@ -48,11 +48,7 @@ jobs:
         echo "${{ steps.get_commit_message.outputs.commit_message }}"
 
   test-integration-microk8s:
-    name: Run integration tests in microk8s deployment
-    needs:
-      - integration-tests-check
     runs-on: ubuntu-latest
-    if: "contains(needs.integration-tests-check.outputs.commit_message, '[integration-tests]')"
     timeout-minutes: 120
     steps:
       - name: Set up Python
