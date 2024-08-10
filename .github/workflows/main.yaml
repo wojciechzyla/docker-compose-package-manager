@@ -71,5 +71,6 @@ jobs:
 
       - name: Run integration tests
         run: |
+          source venv/bin/activate
           cd integration_tests
           pytest .
