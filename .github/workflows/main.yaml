@@ -21,7 +21,7 @@ jobs:
 
       - name: Debug - Print Commit Message
         run: |
-          echo "Commit message: ${{ github.event.head_commit.message }}"
+          echo "Commit message: $(git log --format=%B -n 1 HEAD^2)"
 
       - name: Run unit tests
         run: go test ./src -v
