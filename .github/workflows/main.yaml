@@ -19,12 +19,15 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
 
+      - name: Debug - Print Commit Message
+        run: |
+          echo "Commit message: $(git log --format=%B -n 1 HEAD^2)"
+
       - name: Run unit tests
         run: go test ./src -v
 
   integration-tests:
     runs-on: ubuntu-latest
-    if: "contains(github.event.head_commit.message, '[integrations-tests]')"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
